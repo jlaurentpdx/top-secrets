@@ -25,11 +25,13 @@ describe('top-secrets routes', () => {
   });
 
   it('signs in an existing user on POST to /sessions', async () => {
-    const user = { email: 'jojo@defense.gov', password: 'codobyjojo' };
+    const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
 
-    const newUser = await UserService.create(user);
-    const res = await request(app).post('/api/v1/users/sessions').send(newUser);
+    const user = await UserService.create(credentials);
+    const res = await request(app)
+      .post('/api/v1/users/sessions')
+      .send(credentials);
 
-    expect(res.body).toEqual({ message: 'Signed in successfully', newUser });
+    expect(res.body).toEqual({ message: 'Signed in successfully', user });
   });
 });

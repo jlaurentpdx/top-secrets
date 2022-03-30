@@ -40,12 +40,12 @@ describe('top-secrets routes', () => {
 
     const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
 
-    await UserService.create(credentials);
-    await agent.post('/api/v1/users/sessions').send(credentials);
+    const user = await UserService.create(credentials);
+    let res = await agent.post('/api/v1/users/sessions').send(credentials);
 
-    const res = await request(app)
-      .delete('/api/v1/users/sessions')
-      .send(credentials);
+    expect(res.body).toEqual({ message: 'Signed in successfully', user });
+
+    res = await request(app).delete('/api/v1/users/sessions').send(credentials);
 
     expect(res.body).toEqual({ message: 'Logged out successfully' });
   });

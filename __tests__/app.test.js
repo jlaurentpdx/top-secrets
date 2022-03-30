@@ -52,7 +52,7 @@ describe('top-secrets routes', () => {
     const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
 
     await UserService.create(credentials);
-    await UserService.signIn(credentials);
+    await agent.post('/api/v1/users/sessions').send(credentials);
 
     const res = await agent.get('/api/v1/secrets');
 

@@ -37,16 +37,34 @@ describe('top-secrets routes', () => {
 
   it('logs out a user on DELETE', async () => {
     const agent = request.agent(app);
-
     const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
-
     const user = await UserService.create(credentials);
-    let res = await agent.post('/api/v1/users/sessions').send(credentials);
 
+    let res = await agent.post('/api/v1/users/sessions').send(credentials);
     expect(res.body).toEqual({ message: 'Signed in successfully', user });
 
     res = await agent.delete('/api/v1/users/sessions');
-
     expect(res.body).toEqual({ message: 'Logged out successfully' });
+  });
+
+  it('retrieves a list of secrets on GET if the user is authorized', async () => {
+    const agent = request.agent(app);
+    const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
+
+    await UserService.create(credentials);
+    await UserService.signIn(credentials);
+
+    const res = await agent.get('/api/v1/secrets');
+
+    expect(res.body).toEqual(
+      expect.arrayContaining([
+        {
+          id: expect.any(String),
+          title: 'Area 52',
+          description: 'There is nothing here.',
+          created_at: expect.any(String),
+        },
+      ])
+    );
   });
 });

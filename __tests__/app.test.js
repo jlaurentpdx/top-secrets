@@ -34,4 +34,19 @@ describe('top-secrets routes', () => {
 
     expect(res.body).toEqual({ message: 'Signed in successfully', user });
   });
+
+  it('logs out a user on DELETE', async () => {
+    const agent = request.agent(app);
+
+    const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
+
+    await UserService.create(credentials);
+    await agent.post('/api/v1/users/sessions').send(credentials);
+
+    const res = await request(app)
+      .delete('/api/v1/users/sessions')
+      .send(credentials);
+
+    expect(res.body).toEqual({ message: 'Logged out successfully' });
+  });
 });

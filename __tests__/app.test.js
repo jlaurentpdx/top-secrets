@@ -45,7 +45,7 @@ describe('top-secrets routes', () => {
 
     expect(res.body).toEqual({ message: 'Signed in successfully', user });
 
-    res = await request(app).delete('/api/v1/users/sessions').send(credentials);
+    res = await agent.delete('/api/v1/users/sessions');
 
     expect(res.body).toEqual({ message: 'Logged out successfully' });
   });

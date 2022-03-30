@@ -62,7 +62,7 @@ describe('top-secrets routes', () => {
           id: expect.any(String),
           title: 'Area 52',
           description: 'There is nothing here.',
-          created_at: expect.any(String),
+          createdAt: expect.any(String),
         },
       ])
     );

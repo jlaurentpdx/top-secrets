@@ -92,6 +92,10 @@ describe('top-secrets routes', () => {
 
     const secrets = await Secret.getAll();
 
-    expect(secrets).toEqual(expect.arrayContaining(newSecret));
+    expect(secrets).toEqual(
+      expect.arrayContaining([
+        { id: expect.any(String), createdAt: expect.any(Date), ...newSecret },
+      ])
+    );
   });
 });

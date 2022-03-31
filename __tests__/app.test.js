@@ -3,6 +3,7 @@ const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
 const UserService = require('../lib/services/UserService');
+const Secret = require('../lib/models/Secret');
 
 describe('top-secrets routes', () => {
   beforeEach(() => {
@@ -12,6 +13,8 @@ describe('top-secrets routes', () => {
   afterAll(() => {
     pool.end();
   });
+
+  const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
 
   it('registers a new user on POST', async () => {
     const res = await request(app)
@@ -25,8 +28,6 @@ describe('top-secrets routes', () => {
   });
 
   it('signs in an existing user on POST to /sessions', async () => {
-    const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
-
     const user = await UserService.create(credentials);
     const res = await request(app)
       .post('/api/v1/users/sessions')
@@ -37,7 +38,6 @@ describe('top-secrets routes', () => {
 
   it('logs out a user on DELETE', async () => {
     const agent = request.agent(app);
-    const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
     const user = await UserService.create(credentials);
 
     let res = await agent.post('/api/v1/users/sessions').send(credentials);
@@ -47,9 +47,8 @@ describe('top-secrets routes', () => {
     expect(res.body).toEqual({ message: 'Logged out successfully' });
   });
 
-  it('retrieves a list of secrets on GET if the user is authorized', async () => {
+  it('retrieves a list of secrets on GET if the user is authenticated', async () => {
     const agent = request.agent(app);
-    const credentials = { email: 'jojo@defense.gov', password: 'codobyjojo' };
 
     await UserService.create(credentials);
     await agent.post('/api/v1/users/sessions').send(credentials);
@@ -66,5 +65,33 @@ describe('top-secrets routes', () => {
         },
       ])
     );
+  });
+
+  it('adds a new secret when an authenticated user POSTs to secrets', async () => {
+    const newSecret = {
+      title: 'big secret',
+      description: 'very scary',
+    };
+
+    const agent = request.agent(app);
+
+    const user = await UserService.create(credentials);
+    const signIn = await agent.post('/api/v1/users/sessions').send(credentials);
+    expect(signIn.body).toEqual({ message: 'Signed in successfully', user });
+
+    const res = await agent.post('/api/v1/secrets').send(newSecret);
+
+    expect(res.body).toEqual({
+      message: 'Secret successfully added.',
+      secret: {
+        id: expect.any(String),
+        createdAt: expect.any(String),
+        ...newSecret,
+      },
+    });
+
+    const secrets = await Secret.getAll();
+
+    expect(secrets).toEqual(expect.arrayContaining(newSecret));
   });
 });

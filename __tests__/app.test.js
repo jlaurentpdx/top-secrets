@@ -36,6 +36,15 @@ describe('top-secrets routes', () => {
     expect(res.body).toEqual({ message: 'Signed in successfully', user });
   });
 
+  it('throws an error on invalid login credentials', async () => {
+    const res = await request(app).post('/api/v1/users/sessions').send({
+      email: 'bad@man.dan',
+      password: 'yesiambad',
+    });
+
+    expect(res.status).toEqual(500);
+  });
+
   it('logs out a user on DELETE', async () => {
     const agent = request.agent(app);
     const user = await UserService.create(credentials);
@@ -67,6 +76,12 @@ describe('top-secrets routes', () => {
     );
   });
 
+  it('returns an error on GET if user is unauthenticated', async () => {
+    const res = await request(app).get('/api/v1/secrets');
+
+    expect(res.status).toEqual(401);
+  });
+
   it('adds a new secret when an authenticated user POSTs to secrets', async () => {
     const newSecret = {
       title: 'big secret',
@@ -92,10 +107,22 @@ describe('top-secrets routes', () => {
 
     const secrets = await Secret.getAll();
 
+    // Verify that our new secret appears in the list of secrets
     expect(secrets).toEqual(
       expect.arrayContaining([
         { id: expect.any(String), createdAt: expect.any(Date), ...newSecret },
       ])
     );
+  });
+
+  it('returns an error on POST if user is unauthenticated', async () => {
+    const res = await request(app)
+      .post('/api/v1/secrets')
+      .send({
+        title: 'hello, government',
+        description: 'I am infiltrating your secrets.',
+      });
+
+    expect(res.status).toEqual(401);
   });
 });
